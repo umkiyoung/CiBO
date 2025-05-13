@@ -57,3 +57,8 @@ sh baselines/scripts/cibo.sh
 ```
 
 All the settings are written in the [baselines/scripts](baselines/scripts) folder.
+
+# References:
+Code references
+Our implementation on diffusion sampler is based on "Improved Improved off-policy training of diffusion samplers" (https://github.com/GFNOrg/gfn-diffusion)
+
