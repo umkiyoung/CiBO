@@ -26,6 +26,40 @@ from libsvmdata import fetch_libsvm
 
 import timeit
 
+class CrossVal_(CrossVal):
+    def __init__(self, criterion, cv=None):
+        super().__init__(criterion, cv)
+
+
+    def get_val(self, model, X, y, log_alpha, monitor=None, tol=1e-3):
+        """Get value of criterion.
+
+        Parameters
+        ----------
+        model: instance of ``sparse_ho.base.BaseModel``
+            A model that follows the sparse_ho API.
+        X: array-like, shape (n_samples, n_features)
+            Design matrix.
+        y: ndarray, shape (n_samples,)
+            Observation vector.
+        log_alpha: float or np.array
+            Logarithm of hyperparameter.
+        monitor: instance of Monitor.
+            Monitor.
+        tol: float, optional (default=1e-3)
+            Tolerance for the inner problem.
+        """
+
+        if self.dict_crits is None:
+            self._initialize(model, X)
+        values = np.array([
+            self.dict_crits[i].get_val(
+                self.dict_models[i], X, y, log_alpha, tol=tol) for i in range(
+                    self.n_splits)])
+        val = np.mean(values)
+        monitor(val, None, alpha=np.exp(log_alpha))
+        return val, values
+
 
 class SyntheticBenchmark():
     """
@@ -589,7 +623,7 @@ class RealBenchmark():
         model = WeightedLasso(estimator=estimator)
         monitor = Monitor()
         sub_criterion = HeldOutMSE(None, None)
-        criterion = CrossVal(sub_criterion, cv=self.kf)
+        criterion = CrossVal_(sub_criterion, cv=self.kf)
         val_loss, values = criterion.get_val(model, self.X_train, self.y_train,
                                      log_alpha=scaled_x,
                                      monitor=monitor, tol=self.tol_level)
