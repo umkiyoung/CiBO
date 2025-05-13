@@ -3,7 +3,7 @@ import numpy as np
 import math
 import PIL
 import torch
-from baselines.gfn_folder.gfn_losses import *
+from gfn_folder.gfn_losses import *
 
 
 def set_seed(seed):

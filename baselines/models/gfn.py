@@ -3,7 +3,7 @@ import math
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-from baselines.gfn_folder.gfn_utils import gaussian_params
+from gfn_folder.gfn_utils import gaussian_params
 import torch
 import numpy as np
 from einops import rearrange

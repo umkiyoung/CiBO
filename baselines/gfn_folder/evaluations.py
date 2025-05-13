@@ -1,6 +1,6 @@
 import torch
-from baselines.gfn_folder.gfn_utils import logmeanexp
-from baselines.gfn_folder.sample_metrics import compute_distribution_distances
+from gfn_folder.gfn_utils import logmeanexp
+from gfn_folder.sample_metrics import compute_distribution_distances
 
 
 @torch.no_grad()

@@ -7,12 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 from torch import Tensor
 import numpy as np
 import time
-from baselines.functions.mopta08 import MoptaSoftConstraints, evaluate_batch_parallel
+from functions.mopta08 import MoptaSoftConstraints, evaluate_batch_parallel
 import torch
 from torch.utils.data import Dataset
 from torch.quasirandom import SobolEngine
-from baselines.functions.rover_planning import Rover
-from baselines.functions.lasso_benchmark import LassoDNABenchmark
+from functions.rover_planning import Rover
+from functions.lasso_benchmark import LassoDNABenchmark
 
 
 

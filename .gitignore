@@ -6,10 +6,6 @@
 
 # Ignore the wandb folder
 wandb/
-cma-baxus_results/
-
-# Ignore baselines/scripts folder
-baselines/scripts/
 
 # Python cache files
 __pycache__/

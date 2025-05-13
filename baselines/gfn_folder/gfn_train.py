@@ -2,13 +2,13 @@ import argparse
 import torch
 import os
 
-from baselines.gfn_folder.gfn_utils import set_seed, cal_subtb_coef_matrix, fig_to_image, get_gfn_optimizer, get_gfn_forward_loss, \
+from gfn_folder.gfn_utils import set_seed, cal_subtb_coef_matrix, fig_to_image, get_gfn_optimizer, get_gfn_forward_loss, \
     get_gfn_backward_loss, get_exploration_std, get_name
-from baselines.gfn_folder.buffer import ReplayBuffer
-from baselines.gfn_folder.langevin import langevin_dynamics
-from baselines.models.gfn import GFN
-from baselines.gfn_folder.gfn_losses import *
-from baselines.gfn_folder.evaluations import *
+from gfn_folder.buffer import ReplayBuffer
+from gfn_folder.langevin import langevin_dynamics
+from models.gfn import GFN
+from gfn_folder.gfn_losses import *
+from gfn_folder.evaluations import *
 
 import matplotlib.pyplot as plt
 from tqdm import trange

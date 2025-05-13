@@ -1,6 +1,6 @@
-from baselines.models import *
+from models import *
 import torch
-from baselines.gfn_folder.gfn_train import *
+from gfn_folder.gfn_train import *
 import math
 
 class DiffusionSampler:

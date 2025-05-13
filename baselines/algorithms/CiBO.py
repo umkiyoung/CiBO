@@ -42,7 +42,6 @@ if __name__ == "__main__":
     parser.add_argument("--gamma", type=float, default=1.0)
     parser.add_argument("--lamb", type=float, default=1.0)
     parser.add_argument("--M", type=int, default=10) # Number of samples for filtering
-    parser.add_argument("--filtering", type=str, default="false", choices=('true', 'false'))
     parser.add_argument("--num_ensembles", type=int, default=5)
     parser.add_argument("--save_path", type=str, default="./baselines/results/CiBO/")
     parser.add_argument("--wandb", type=str, default="false", choices=('true', 'false'))
@@ -88,9 +87,6 @@ if __name__ == "__main__":
 
     # For replay buffer
     ################################################################
-    # high beta give steep priorization in reward prioritized replay sampling
-    # parser.add_argument('--beta', type=float, default=1.)
-
     # low rank_weighted give steep priorization in rank-based replay sampling
     parser.add_argument('--rank_weight', type=float, default=1e-2)
     # three kinds of replay training: random, reward prioritized, rank-based
@@ -273,22 +269,20 @@ if __name__ == "__main__":
         ## Sample from the diffusion sampler
         X_sample_total = []
         logR_sample_total = []
-        if args.filtering == "true":
-            for _ in tqdm(range(args.M)): #NOTE we sample batchsize * M * M samples total
-                X_sample = diffusion_sampler.sample(batch_size * args.M, track_gradient=False)
-                logr = proxy_model_ens.log_reward(X_sample)
-                X_sample = X_sample.detach().clone()
-                logr = logr.detach().clone()
-                X_sample_total.append(X_sample)
-                logR_sample_total.append(logr)
-                
-            X_sample = torch.cat(X_sample_total, dim=0)
-            logR_sample = torch.cat(logR_sample_total, dim=0)
+        for _ in tqdm(range(args.M)): #NOTE we sample batchsize * M * M samples total
+            X_sample = diffusion_sampler.sample(batch_size * args.M, track_gradient=False)
+            logr = proxy_model_ens.log_reward(X_sample)
+            X_sample = X_sample.detach().clone()
+            logr = logr.detach().clone()
+            X_sample_total.append(X_sample)
+            logR_sample_total.append(logr)
+            
+        X_sample = torch.cat(X_sample_total, dim=0)
+        logR_sample = torch.cat(logR_sample_total, dim=0)
 
-            #filter largest logR sample with batchsize
-            X_sample = X_sample[torch.argsort(logR_sample, descending=True)[:batch_size]]
-        else:
-            X_sample = diffusion_sampler.sample(batch_size, track_gradient=False)
+        #filter largest logR sample with batchsize
+        X_sample = X_sample[torch.argsort(logR_sample, descending=True)[:batch_size]]
+
  
 
         #---------------------------------------------------------------------------
