@@ -161,7 +161,7 @@ class TestFunction(Dataset):
             return constraint
     
     def eval_objective(self, x):
-        if self.task in ['RoverPlanning']:
+        if self.task in ['RoverPlanning', 'DNA']:
             return self.fun(unnormalize(x, self.fun.bounds))[0]
         elif self.task in ['Mopta']:
             return evaluate_batch_parallel(x, self.fun, self.dtype, self.device)[0]
@@ -208,7 +208,7 @@ class TestFunction(Dataset):
             return y.item()
         
     def eval_all(self, x_batch):
-        if self.task in ['Mopta', 'HalfCheetah']:
+        if self.task in ['Mopta']:
             y, c_list = self.eval_objective_with_constraints(x_batch)
             mask = (c_list > 0).any(dim=1)
             score = torch.where(mask, float('-inf'), y).to(dtype=self.dtype, device=self.device)
@@ -248,3 +248,14 @@ class TestFunction(Dataset):
     
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx], self.C[idx]
+
+
+if __name__ == "__main__":
+    test_function = TestFunction(task='DNA', dim=180, n_init=10, seed=0, indicator='false', dtype=torch.float64, device='cpu', negate=True)
+    test_function.get_initial_points()
+    print(test_function.X.shape)
+    print(test_function.Y.shape)
+    print(test_function.C.shape)
+    print(test_function.true_score.shape)
+    
+    

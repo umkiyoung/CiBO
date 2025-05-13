@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 import numpy as np
 import torch
-from baselines.functions.LassoBench import RealBenchmark, SyntheticBenchmark
+from functions.LassoBench import RealBenchmark, SyntheticBenchmark
 class LassoRealWorldBenchmark:
     '''
     The base class for Lasso realworld benchmark. Use the derived classes
@@ -37,15 +37,24 @@ class LassoRealWorldBenchmark:
         if x.ndim == 1:
             x = np.expand_dims(x, 0)
         assert x.ndim == 2
-        result_list = []
-        results_list = []
+        results = []
         for y in x:
-            result, results = self._b.evaluate(y)
-            result_list.append(result)
-            results_list.append(results)
-        result = np.array(result_list).squeeze()
-        rad = torch.tensor(result + np.random.normal(np.zeros_like(result), np.ones_like(result) * self.noise_std, result.shape), dtype=self.dtype, device=self.device) * -1, 
-        cad = torch.tensor(results_list, dtype=self.dtype, device=self.device) - 0.32
+            result, result_values = self._b.evaluate(y)
+            results.append((result, result_values))
+        
+        # Convert results to numpy arrays
+        result_array = np.array([r[0] for r in results]).squeeze()
+        results_array = np.array([r[1] for r in results])
+        
+        # Add noise and convert to tensors
+        noisy_result = result_array + np.random.normal(
+            np.zeros_like(result_array), 
+            np.ones_like(result_array) * self.noise_std, 
+            result_array.shape
+        )
+        
+        rad = (torch.tensor(noisy_result, dtype=self.dtype, device=self.device) * -1,)
+        cad = torch.tensor(results_array, dtype=self.dtype, device=self.device) - 0.32
         return rad[0], cad
     
     def func(self, x: Union[np.ndarray, List[float], List[List[float]]]):

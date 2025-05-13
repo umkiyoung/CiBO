@@ -30,7 +30,6 @@ class CrossVal_(CrossVal):
     def __init__(self, criterion, cv=None):
         super().__init__(criterion, cv)
 
-
     def get_val(self, model, X, y, log_alpha, monitor=None, tol=1e-3):
         """Get value of criterion.
 
