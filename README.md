@@ -1,9 +1,13 @@
 # 🚀 Posterior Inference in Latent Space for Scalable Constrained Black-box Optimization (CiBO)
 
-A scalable framework for constrained black-box optimization using posterior inference in latent space.
+This repository implements the CiBO method presented in our paper **"Posterior Inference in Latent Space
+for Scalable Constrained Black-box Optimization"**(https://arxiv.org/abs/2507.00480). CiBO leverages diffusion models to perform efficient posterior inference and amortize the sampling from the posterior distribution in the latent space
+of flow-based models, achieving superior performance on various **synthetic and real-world constrained black-box optimization** tasks. 
+
+For a visual explanation of the CiBO framework, please see the image below:
+![figure1_update_ver4](https://github.com/user-attachments/assets/3eed0a81-1e14-45f3-9667-161f1c726cf2)
 
 ---
-
 ## 📑 Table of Contents
 - [Installation](#installation)
 - [Environment Setup](#environment-setup)
