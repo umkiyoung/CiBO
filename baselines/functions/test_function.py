@@ -17,7 +17,7 @@ from functions.lasso_benchmark import LassoDNABenchmark
 
 
 class TestFunction(Dataset):
-    def __init__(self, task: str, dim: int = 200, n_init: int = 200, seed: int = 0, indicator='false', dtype=torch.float64, device='cpu', negate=True,):
+    def __init__(self, task: str, dim: int = 200, n_init: int = 200, seed: int = 0, cons=30, indicator='false', dtype=torch.float64, device='cpu', negate=True,):
         self.task = task
         self.dim = dim
         self.n_init = n_init
@@ -27,6 +27,7 @@ class TestFunction(Dataset):
         self.indicator = indicator
         self.lb, self.ub = None, None
         self.constraints = []
+        self.constraints_coeff = cons
         #NOTE: Synthetic Functions
         if task == 'Ackley':
             # Constrain Settings:
@@ -37,8 +38,8 @@ class TestFunction(Dataset):
             def c1(x):
                 return torch.sum(x, dim=-1) - 0
             def c2(x):
-                return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
-                        
+                return torch.norm(x, p=2, dim=-1) - self.constraints_coeff # 30 #NOTE: Adjusted to 30 for 200D
+
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
             def eval_c2(x):
@@ -56,7 +57,7 @@ class TestFunction(Dataset):
             def c1(x):
                 return torch.sum(x, dim=-1) - 0
             def c2(x):
-                return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
+                return torch.norm(x, p=2, dim=-1) - self.constraints_coeff #NOTE: Adjusted to 30 for 200D
                         
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
@@ -84,7 +85,7 @@ class TestFunction(Dataset):
             self.constraints.append((c2, eval_c2))
         
         elif task == 'DNA':
-            self.fun = LassoDNABenchmark(seed=seed, dtype=dtype, device=device)  
+            self.fun = LassoDNABenchmark(seed=seed, dtype=dtype, device=device, constraints_coeff=cons)  
             self.lb, self.ub = -1, 1
             
         elif task == 'Mopta':
@@ -164,7 +165,7 @@ class TestFunction(Dataset):
         if self.task in ['RoverPlanning', 'DNA']:
             return self.fun(unnormalize(x, self.fun.bounds))[0]
         elif self.task in ['Mopta']:
-            return evaluate_batch_parallel(x, self.fun, self.dtype, self.device)[0]
+            return evaluate_batch_parallel(x, self.fun, self.dtype, self.device,self.constraints_coeff)[0]
         else:
             return self.fun(unnormalize(x, self.fun.bounds))
     
@@ -172,7 +173,7 @@ class TestFunction(Dataset):
         if self.task in ['RoverPlanning', 'DNA']:
             return self.indicator_function(self.fun(unnormalize(x, self.fun.bounds))[1])
         elif self.task in ['Mopta']:
-            return self.indicator_function(evaluate_batch_parallel(x,self.fun,self.dtype,self.device)[1])   
+            return self.indicator_function(evaluate_batch_parallel(x,self.fun,self.dtype,self.device,self.constraints_coeff)[1])   
         else:
             c_list = []
             for c, eval_c in self.constraints:
@@ -194,7 +195,7 @@ class TestFunction(Dataset):
     def eval_score(self, x):
         if self.task in ['Mopta']: 
             # y, c_list = self.fun(unnormalize(x, self.fun.bounds))
-            y, c_list = evaluate_batch_parallel(x, self.fun, self.dtype, self.device)
+            y, c_list = evaluate_batch_parallel(x, self.fun, self.dtype, self.device, self.constraints_coeff)
             mask = (c_list > 0).any(dim=1)
             new_c_list = torch.where(mask, float('-inf'), y).to(dtype=self.dtype, device=self.device)
             return new_c_list.unsqueeze(-1)
@@ -251,8 +252,12 @@ class TestFunction(Dataset):
 
 
 if __name__ == "__main__":
-    test_function = TestFunction(task='DNA', dim=180, n_init=10, seed=0, indicator='false', dtype=torch.float64, device='cpu', negate=True)
+    # test_function = TestFunction(task='DNA', dim=180, n_init=10, seed=0, indicator='false', dtype=torch.float64, device='cpu', negate=True)
+    # test_function = TestFunction(task='Rastrigin', dim=200, n_init=10, seed=0, cons=30, indicator='false', dtype=torch.float64, device='cpu', negate=True)
+    test_function = TestFunction(task='Mopta', dim=124, n_init=10, seed=0, cons=68, indicator='false', dtype=torch.float64, device='cpu', negate=True)
     test_function.get_initial_points()
+    test_function.get_initial_points()
+    print(test_function.X)
     print(test_function.X.shape)
     print(test_function.Y.shape)
     print(test_function.C.shape)

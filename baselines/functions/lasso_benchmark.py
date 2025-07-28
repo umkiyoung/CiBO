@@ -6,7 +6,7 @@ class LassoRealWorldBenchmark:
     '''
     The base class for Lasso realworld benchmark. Use the derived classes
     '''
-    def __init__(self, pick_data: str, seed: Optional[int] = None, dtype=torch.float64, device = 'cpu', **kwargs):
+    def __init__(self, pick_data: str, seed: Optional[int] = None, dtype=torch.float64, device = 'cpu', constraints_coeff=torch.int64, **kwargs):
         """
         Constructs all the necessary attributes for real-world bench.
 
@@ -19,7 +19,7 @@ class LassoRealWorldBenchmark:
                 seed number
         """
         self._b = RealBenchmark(
-            pick_data=pick_data, mf_opt="discrete_fidelity", seed=seed
+            pick_data=pick_data, mf_opt="discrete_fidelity", seed=seed,constraints_coeff=constraints_coeff
         )
         self.input_dim = self._b.n_features
         self.effective_dim = None # to be filled in derived classes
@@ -139,8 +139,8 @@ class LassoDNABenchmark(LassoRealWorldBenchmark):
        seed: seed number
        **kwargs:
    """
-    def __init__(self, seed: Optional[int] = None, dtype=torch.float64, device='cpu', **kwargs):
-        super().__init__(pick_data="dna", seed=seed, dtype=dtype, device=device)
+    def __init__(self, seed: Optional[int] = None, dtype=torch.float64, device='cpu',constraints_coeff=torch.int64, **kwargs):
+        super().__init__(pick_data="dna", seed=seed, dtype=dtype, device=device,constraints_coeff=constraints_coeff)
         self.effective_dim = 43
 
 

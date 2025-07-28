@@ -16,6 +16,7 @@ from gfn_folder.buffer import ReplayBuffer
 from utils import save_numpy_array, set_seed, get_lagrangian
 import wandb
 import multiprocessing as mp
+import torch.nn.functional as F
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -114,6 +115,8 @@ if __name__ == "__main__":
     parser.add_argument('--weight_decay', type=float, default=1e-7)
     parser.add_argument('--use_weight_decay', action='store_true', default=False)
     parser.add_argument('--eval', action='store_true', default=False)
+    
+    parser.add_argument('--constraint_coeff', type=int, default=2)
     args = parser.parse_args()
 
     mp.set_start_method("spawn", force=True)
@@ -133,9 +136,9 @@ if __name__ == "__main__":
     train_batch_size = args.train_batch_size
     dtype = torch.float32 if args.dtype == "float32" else torch.float64
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+    constraint_coeff = args.constraint_coeff
     set_seed(seed)
-    test_function = TestFunction(task = task, dim = dim, n_init = n_init, seed = seed, indicator=indicator, dtype=dtype, device=device)
+    test_function = TestFunction(task = task, dim = dim, n_init = n_init, cons = constraint_coeff, seed = seed, indicator=indicator, dtype=dtype, device=device)
     test_function.get_initial_points()
    
     num_rounds = (args.max_evals - n_init) // batch_size
@@ -283,7 +286,15 @@ if __name__ == "__main__":
         #filter largest logR sample with batchsize
         X_sample = X_sample[torch.argsort(logR_sample, descending=True)[:batch_size]]
 
- 
+        # calculate cosine distance
+        X_norm = F.normalize(X_sample, p=2, dim=1)  # shape: (100, 200)
+        cosine_sim_matrix = X_norm @ X_norm.T  # shape: (100, 100)
+        cosine_dist_matrix = 1 - cosine_sim_matrix
+
+        triu_indices = torch.triu_indices(cosine_dist_matrix.size(0), cosine_dist_matrix.size(1), offset=1)
+        pairwise_distances = cosine_dist_matrix[triu_indices[0], triu_indices[1]]
+        average_cosine_distance = pairwise_distances.mean()
+    
 
         #---------------------------------------------------------------------------
         ## Evaluation Part
@@ -326,6 +337,7 @@ if __name__ == "__main__":
                 "Min Constraint in this round": C_sample_unnorm.min().item(),
                 "Max Log rewards": proxy_model_ens.log_reward(test_function.X).max().item(),
                 "Max True score": True_total.max().item(),
+                "Average Cosine Distance": average_cosine_distance.item(),
                 "Time taken": time.time() - start_time,
                 "Seed": seed,
             }
@@ -335,9 +347,9 @@ if __name__ == "__main__":
         
         save_len = min(len(Y_total) // 1000 * 1000, args.max_evals)
         save_np = True_total[:save_len]
-        file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len}.npy"
+        file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.constraint_coeff}_{args.max_evals}_{save_len}.npy"
         save_numpy_array(path=args.save_path, array=save_np, file_name=file_name)
         
-        previous_file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len-1000}.npy"
+        previous_file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.constraint_coeff}_{args.max_evals}_{save_len-1000}.npy"
         if os.path.exists(os.path.join(args.save_path, previous_file_name)):
             os.remove(os.path.join(args.save_path, previous_file_name))

@@ -512,7 +512,7 @@ class RealBenchmark():
     run_sparseho(grad_solver='gd', algo_pick='imp_forw', n_steps=10, init_point=None, verbose=False):
         Running basedline Sparse-HO and return loss, MSPE and time elapsed.
     """
-    def __init__(self, pick_data=None, mf_opt=None, tol_level=1e-4, n_splits=5, test_size=0.15, seed=42):
+    def __init__(self, pick_data=None, mf_opt=None, tol_level=1e-4, n_splits=5, test_size=0.15, seed=42, constraints_coeff=5): # 이 부분 수정
         """
         Constructs all the necessary attributes for real-world bench.
 
@@ -533,7 +533,6 @@ class RealBenchmark():
             seed: int, optional
                 seed number
         """
-
         self.tol_level = tol_level
 
         if pick_data.lower() == 'diabetes':
@@ -567,15 +566,18 @@ class RealBenchmark():
                     "Please select one of two mf options continuous or discrete_fidelity.")
 
         # split train and test
-        self.n_splits = n_splits
+        # self.n_splits = n_splits
+        
+        self.n_splits = constraints_coeff
         if pick_data.lower() != 'leukemia':
             self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
                 X, y, test_size=test_size, random_state=seed)
 
         self.n_features = self.X_train.shape[1]
 
-        self.kf = KFold(shuffle=True, n_splits=n_splits, random_state=seed)
-
+        # self.kf = KFold(shuffle=True, n_splits=n_splits, random_state=seed)
+        self.kf = KFold(shuffle=True, n_splits=constraints_coeff, random_state=seed)
+    
         self.alpha_max = np.max(np.abs(
             self.X_train.T @ self.y_train)) / len(self.y_train)
         self.alpha_min = self.alpha_max / alpha_scale
