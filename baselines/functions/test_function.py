@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from botorch.test_functions import Ackley, Rastrigin, Rosenbrock
+from botorch.test_functions import Ackley, Rastrigin, Rosenbrock, Levy
 from botorch.utils.transforms import unnormalize
 from gpytorch.constraints import Interval
 from concurrent.futures import ThreadPoolExecutor
@@ -38,6 +38,11 @@ class TestFunction(Dataset):
                 return torch.sum(x, dim=-1) - 0
             def c2(x):
                 return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
+
+            # def c1(x):
+            #     return torch.sum(x - torch.ones_like(x), dim=-1) - 0
+            # def c2(x):
+            #     return torch.norm(x - torch.ones_like(x), p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
                         
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
@@ -57,7 +62,31 @@ class TestFunction(Dataset):
                 return torch.sum(x, dim=-1) - 0
             def c2(x):
                 return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
-                        
+
+
+            # def c1(x):
+            #     return torch.sum(x - torch.ones_like(x), dim=-1) - 0
+            # def c2(x):
+            #     return torch.norm(x - torch.ones_like(x), p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
+
+            def eval_c1(x):
+                return c1(unnormalize(x, self.fun.bounds))
+            def eval_c2(x):
+                return c2(unnormalize(x, self.fun.bounds))
+            
+            self.constraints.append((c1, eval_c1))
+            self.constraints.append((c2, eval_c2))
+            
+        elif task == 'Levy':
+            self.fun = Levy(dim=dim, negate = negate).to(dtype=dtype, device=device)
+            self.lb, self.ub = -10, 10 #Following LA-MCTS
+            
+            def c1(x):
+                return torch.sum(x, dim=-1) - dim
+            def c2(x):
+                ones = torch.ones_like(x)
+                return torch.norm(x-ones, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
+            
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
             def eval_c2(x):
@@ -94,7 +123,44 @@ class TestFunction(Dataset):
         elif task == 'RoverPlanning':
             self.fun = Rover(dim=dim, dtype=dtype, device=device, force_initial_end=True)
             self.lb, self.ub = 0, 1           
+        
+        elif task in ['Ant', 'Swimmer', 'HalfCheetah', 'Hopper', 'Walker2D', 'Humanoid']:
+            env_settings = {
+                'Ant': ('Ant-v4', -1.0, 1.0, 5),
+                'Swimmer': ('Swimmer-v4', -1.0, 1.0, 5),
+                'HalfCheetah': ('HalfCheetah-v4', -1.0, 1.0, 5),
+                'Hopper': ('Hopper-v4', -1.0, 1.0, 5),
+                'Walker2d': ('Walker2d-v4', -1.0, 1.0, 5),
+                'Humanoid': ('Humanoid-v4', -1.0, 1.0, 5)
+            }
+            env_name, self.lb, self.ub, num_rollouts = env_settings[task]
+            self.fun = MujucoPolicyFunc(
+                policy_file = f'baselines/functions/trained_policies/{task}-v1/lin_policy_plus.npz',
+                env = env_name,
+                lb = self.lb,
+                ub = self.ub,
+                num_rollouts = num_rollouts,
+                dtype = dtype,
+                device = device,
+                seed=seed,
+                negate=negate             
+            )        
             
+            
+        elif task == "Rosenbrock_Hard":
+            self.fun = Rosenbrock(dim=dim, negate = negate).to(dtype=dtype, device=device)
+            self.lb, self.ub = -3, 5 #Following SCBO
+            
+            c1 = Levy(dim=dim, negate = False).to(dtype=dtype, device = device)
+            c2 = DixonPrice(dim=dim, negate = False).to(dtype=dtype, device = device)
+            
+            def eval_c1(x):
+                return c1(unnormalize(x, self.fun.bounds))-10
+            def eval_c2(x):
+                return c2(unnormalize(x, self.fun.bounds))-10
+            self.constraints.append((c1, eval_c1))
+            self.constraints.append((c2, eval_c2))
+          
         else:
             raise ValueError(f"Unknown task: {task}")
         
@@ -161,18 +227,19 @@ class TestFunction(Dataset):
             return constraint
     
     def eval_objective(self, x):
-        if self.task in ['RoverPlanning', 'DNA']:
+        if self.task in ['RoverPlanning', 'LunarLanding', 'Ant', 'Swimmer', 'HalfCheetah', 'Hopper', 'Walker2D', 'Humanoid', 'DNA']:
             return self.fun(unnormalize(x, self.fun.bounds))[0]
         elif self.task in ['Mopta']:
             return evaluate_batch_parallel(x, self.fun, self.dtype, self.device)[0]
+            # return self.fun(unnormalize(x, self.fun.bounds))[0]
         else:
             return self.fun(unnormalize(x, self.fun.bounds))
     
     def eval_constraints(self, x):
-        if self.task in ['RoverPlanning', 'DNA']:
+        if self.task in ['RoverPlanning', 'LunarLanding', 'Ant', 'Swimmer', 'HalfCheetah', 'Hopper', 'Walker2D', 'Humanoid', 'DNA']:
             return self.indicator_function(self.fun(unnormalize(x, self.fun.bounds))[1])
         elif self.task in ['Mopta']:
-            return self.indicator_function(evaluate_batch_parallel(x,self.fun,self.dtype,self.device)[1])   
+            return self.indicator_function(evaluate_batch_parallel(x,self.fun,self.dtype,self.device)[1])
         else:
             c_list = []
             for c, eval_c in self.constraints:
@@ -183,7 +250,7 @@ class TestFunction(Dataset):
             return self.indicator_function(c_list)
     
     def eval_objective_with_constraints(self, x):
-        if self.task in ['RoverPlanning', 'DNA']:
+        if self.task in ['RoverPlanning', 'LunarLanding', 'Ant', 'Swimmer', 'HalfCheetah', 'Hopper', 'Walker2D', 'Humanoid', 'DNA']:
             vals, constraints = self.fun(unnormalize(x, self.fun.bounds))
             return vals, self.indicator_function(constraints)
         y = self.eval_objective(x)
@@ -208,7 +275,7 @@ class TestFunction(Dataset):
             return y.item()
         
     def eval_all(self, x_batch):
-        if self.task in ['Mopta']:
+        if self.task in ['Mopta', 'HalfCheetah', 'Ant', 'Swimmer', 'Hopper', 'Walker2D', 'Humanoid']:
             y, c_list = self.eval_objective_with_constraints(x_batch)
             mask = (c_list > 0).any(dim=1)
             score = torch.where(mask, float('-inf'), y).to(dtype=self.dtype, device=self.device)
@@ -221,9 +288,9 @@ class TestFunction(Dataset):
         
     def get_initial_points(self):
         sobol = SobolEngine(self.dim, scramble=True, seed=self.seed)
-        if self.indicator == 'true' and self.task in ['Ackley', 'Rastrigin', 'Rosenbrock']:
-            self.X = sobol.draw(n=self.n_init-10).to(self.dtype).to(self.device)
-            self.X = torch.cat([self.X, self.feasible_sampler(n_samples=10, dim=self.dim)])
+        if self.indicator == 'true' and self.task in ['Ackley', 'Rastrigin', 'Levy', 'Rosenbrock']:
+            self.X = sobol.draw(n=self.n_init//2).to(self.dtype).to(self.device)
+            self.X = torch.cat([self.X, self.feasible_sampler(n_samples=self.n_init//2, dim=self.dim)])
         else:
             self.X = sobol.draw(n=self.n_init).to(self.dtype).to(self.device)
         self.Y, self.C, self.true_score = self.eval_all(self.X)
@@ -239,7 +306,7 @@ class TestFunction(Dataset):
             return constraint
     
     def normalizing_constraints(self, constraints):
-        max_vals = constraints.abs().max(dim=0, keepdim=True).values
+        max_vals = constraints.abs().max(dim=0, keepdim=True).values  # 컬럼별 최대 절대값
         scaled_constraints = constraints / (max_vals + 1e-08)        
         return scaled_constraints
         
@@ -249,13 +316,10 @@ class TestFunction(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx], self.C[idx]
 
+class WeightTestFunction(TestFunction):
+    def __init__(self, task: str, dim: int = 200, n_init: int = 200, seed: int = 0, indicator='false', dtype=torch.float64, device='cpu', negate=True, weights=None):
+        super().__init__(task=task, dim=dim, n_init=n_init, seed=seed, indicator=indicator, dtype=dtype, device=device, negate=negate)
+        self.weights = weights
 
-if __name__ == "__main__":
-    test_function = TestFunction(task='DNA', dim=180, n_init=10, seed=0, indicator='false', dtype=torch.float64, device='cpu', negate=True)
-    test_function.get_initial_points()
-    print(test_function.X.shape)
-    print(test_function.Y.shape)
-    print(test_function.C.shape)
-    print(test_function.true_score.shape)
-    
-    
+    def __getitem__(self, idx):
+        return self.X[idx], self.Y[idx], self.C[idx], self.weights[idx]

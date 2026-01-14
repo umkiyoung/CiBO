@@ -98,10 +98,11 @@ def get_value_based_weights(scores, temp="90"):
     weights = np.clip(weights, a_min=0.0, a_max=5.0)
     return weights.astype(np.float64)[:, np.newaxis]
 
-def get_rank_based_weights(scores):
-    ranks = np.argsort(np.argsort(-scores))
-    weights = 1.0 / (1e-2 * len(scores) + ranks)
+def get_rank_based_weights(weights, k=0.01):
+    ranks = torch.argsort(torch.argsort(-weights))  # 0-based ranks: 1, 3, 4 -> 2, 1, 0
+    weights = 1.0 / (k * len(weights) + ranks)
     return weights
+
 
 def get_max_value_per_rounds(Total_Y, n_init, max_evals, batch_size):
     max_values = []

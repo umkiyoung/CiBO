@@ -13,7 +13,7 @@ from models.gfn import GFN
 from models.diffusion_sampler import DiffusionSampler, Energy
 from gfn_folder.gfn_utils import get_gfn_optimizer
 from gfn_folder.buffer import ReplayBuffer
-from utils import save_numpy_array, set_seed, get_lagrangian
+from baselines.utils import save_numpy_array, set_seed, get_lagrangian, get_rank_based_weights
 import wandb
 import multiprocessing as mp
 
@@ -46,6 +46,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_path", type=str, default="./baselines/results/CiBO/")
     parser.add_argument("--wandb", type=str, default="false", choices=('true', 'false'))
     parser.add_argument("--indicator", type=str, default="false", choices=('true', 'false'))
+    parser.add_argument("--rank_k", type=float, default=1e-2)
 
     ################################################################
     # Arguments for diffusion sampler mostly from Improved Offpolicy Training of Diffusion Sampler
@@ -168,7 +169,7 @@ if __name__ == "__main__":
         norm_C = test_function.normalizing_constraints(test_function.C)
         
         weights = get_lagrangian(norm_Y.squeeze(), norm_C, lamb, indicator)
-        weights = torch.exp(weights)
+        weights = get_rank_based_weights(weights, k=args.rank_k)
 
         sampler = WeightedRandomSampler(weights, len(weights), replacement=True)    
         data_loader = DataLoader(test_function, batch_size=train_batch_size, sampler=sampler)
