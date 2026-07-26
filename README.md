@@ -133,6 +133,19 @@ curves in the paper are the mean and one standard deviation of these arrays acro
 
 Weights & Biases logging is off by default for every method; pass `--wandb true` to enable it.
 
+#### Memory note for SCBO on Mopta
+
+Mopta has 68 constraints, and SCBO draws its Thompson samples from the joint posterior of all
+constraint GPs over `N_CANDIDATES = 5000` points in `float64` (`baselines/algorithms/scbo.py`).
+That densifies a 5000 x 5000 block per constraint, so the peak GPU memory is roughly 45 GB —
+more than a 48 GB card can hold. Either use a larger GPU, or run this one configuration on CPU:
+
+```bash
+CUDA_VISIBLE_DEVICES="" python baselines/algorithms/scbo.py --task Mopta --dim 124 ...
+```
+
+Every other (method, task) pair fits comfortably on a single 48 GB GPU.
+
 ---
 
 ## 📚 References

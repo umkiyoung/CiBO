@@ -279,8 +279,9 @@ class TestFunction(Dataset):
         if self.task in ['Mopta', 'HalfCheetah', 'Ant', 'Swimmer', 'Hopper', 'Walker2D', 'Humanoid']:
             y, c_list = self.eval_objective_with_constraints(x_batch)
             mask = (c_list > 0).any(dim=1)
-            score = torch.where(mask, float('-inf'), y).to(dtype=self.dtype, device=self.device)
-            y = y.unsqueeze(-1)
+            score = torch.where(mask, float('-inf'), y).to(dtype=self.dtype, device=self.device).reshape(-1)
+            # Mopta returns a 0-dim value for a single point, so reshape rather than unsqueeze.
+            y = y.reshape(-1, 1)
         else:
             y = torch.tensor([self.eval_objective(x) for x in x_batch], dtype=self.dtype, device=self.device).unsqueeze(-1)
             c_list = torch.cat([self.eval_constraints(x) for x in x_batch], dim=0).to(self.dtype).to(self.device)
