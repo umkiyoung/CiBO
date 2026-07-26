@@ -44,7 +44,7 @@ class Proxy(nn.Module):
         return score.detach()
 
 class ProxyEnsemble(nn.Module):
-    def __init__(self, x_dim, hidden_dim=1024, num_hidden_layers=1, output_dim=1, n_ensembles=5, ucb_reward=False, indicator = 'false', lamb=1.0):
+    def __init__(self, x_dim, hidden_dim=1024, num_hidden_layers=1, output_dim=1, n_ensembles=5, ucb_reward=False, indicator = 'false', constraint_formulation="Lagrangian", lamb=1.0):
         super(ProxyEnsemble, self).__init__()
         self.n_ensembles = n_ensembles
         self.models = nn.ModuleList([Proxy(x_dim, hidden_dim, num_hidden_layers, 1) for _ in range(n_ensembles)])
@@ -53,6 +53,8 @@ class ProxyEnsemble(nn.Module):
         self.gamma = 1.0
         self.lamb = lamb
         self.indicator = indicator
+        # Soft / LogBarrier formulations are not supported; "None" disables constraint handling.
+        self.constraint_formulation = constraint_formulation
         if self.n_ensembles == 1:
             self.ucb_reward = False
             self.gamma = 0.0
@@ -77,7 +79,10 @@ class ProxyEnsemble(nn.Module):
             mean, std, constrain_stacked = self.uncertainty_forward(x)
             pred_y = mean + self.gamma * std
             pred_y = pred_y.squeeze()
-            pred_y = get_lagrangian(pred_y, constrain_stacked, self.lamb, self.indicator)                
+            if self.constraint_formulation in ("Soft", "LogBarrier"):
+                raise NotImplementedError(f"constraint_formulation={self.constraint_formulation}")
+            elif self.constraint_formulation == "Lagrangian":
+                pred_y = get_lagrangian(pred_y, constrain_stacked, self.lamb, self.indicator)
         else:
             pred_y = self(x).squeeze()
         

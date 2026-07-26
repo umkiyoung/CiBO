@@ -116,6 +116,7 @@ same tasks, seeds and budgets as `cibo.sh`:
 | SCBO | `baselines/algorithms/scbo.py` | `baselines/scripts/scbo.sh` | |
 | PCAGP-SCBO | `baselines/algorithms/pcagp_scbo.py` | `baselines/scripts/pcagp_scbo.sh` | needs `torch_pca`; `l = 2` on synthetic tasks, searched over `[2, ⌊D/2⌋]` on real-world tasks |
 | FuRBO | `baselines/algorithms/furbo.py` | `baselines/scripts/furbo.sh` | |
+| DiffOPT | `baselines/algorithms/diffopt.py` | `baselines/scripts/diffopt.sh` | re-implemented (no public code); diffusion model + Langevin dynamics on the surrogate energy |
 | cEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name cEI` |
 | LogcEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name logcEI`; needs botorch >= 0.9 |
 | CMA-ES | `baselines/algorithms/cmaes.py` | `baselines/scripts/cmaes.sh` | needs `cma`; same Lagrangian and `--lamb` as CiBO |
