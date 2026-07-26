@@ -56,10 +56,15 @@ python -c "import mujoco_py"  # Mujoco compile test
 pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 
 # 4. Additional Dependencies
-pip install botorch==0.6.4 gpytorch==1.6.0
+pip install botorch gpytorch          # >= 0.8 (>= 0.9 for the LogcEI baseline)
 pip install gym==0.13.1 attrdict==2.0.1 wandb==0.15.3 matplotlib==3.7.5
 pip install pandas==1.5.3 scikit-learn==1.2.2 tqdm==4.64.1 
 pip install torchdiffeq
+
+# 4b. Baseline-only dependencies
+pip install cma           # CMA-ES
+pip install torch_pca     # PCAGP-SCBO
+pip install scipy         # COBYLA
 
 # 5. Lasso Environment
 pip install celer
@@ -100,6 +105,32 @@ Each task is launched one seed per GPU, four seeds at a time; adjust the `CUDA_V
 assignment in the script if a different number of GPUs is available.
 
 The HalfCheetah task additionally requires `gym` and MuJoCo (see [Environment Setup](#-environment-setup)).
+
+### Baselines
+
+Every baseline compared against in the paper is included, with one script per method covering the
+same tasks, seeds and budgets as `cibo.sh`:
+
+| Baseline | Implementation | Script | Notes |
+|---|---|---|---|
+| SCBO | `baselines/algorithms/scbo.py` | `baselines/scripts/scbo.sh` | |
+| PCAGP-SCBO | `baselines/algorithms/pcagp_scbo.py` | `baselines/scripts/pcagp_scbo.sh` | needs `torch_pca`; `l = 2` on synthetic tasks, searched over `[2, ⌊D/2⌋]` on real-world tasks |
+| FuRBO | `baselines/algorithms/furbo.py` | `baselines/scripts/furbo.sh` | |
+| cEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name cEI` |
+| LogcEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name logcEI`; needs botorch >= 0.9 |
+| CMA-ES | `baselines/algorithms/cmaes.py` | `baselines/scripts/cmaes.sh` | needs `cma`; same Lagrangian and `--lamb` as CiBO |
+| COBYLA | `baselines/algorithms/cobyla.py` | `baselines/scripts/cobyla.sh` | `scipy.optimize.minimize(method="COBYLA")` |
+| Sobol | `baselines/algorithms/sobol.py` | `baselines/scripts/sobol.sh` | non-adaptive space-filling baseline |
+
+```bash
+sh baselines/scripts/scbo.sh      # and likewise for the other baselines
+```
+
+Every method writes one `.npy` per run to `baselines/results/<method>/`, holding the running best
+feasible score over the evaluation budget (`-inf` until the first feasible point). The mean/std
+curves in the paper are the mean and one standard deviation of these arrays across seeds.
+
+Weights & Biases logging is off by default for every method; pass `--wandb true` to enable it.
 
 ---
 
