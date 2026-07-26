@@ -13,6 +13,7 @@ from torch.utils.data import Dataset
 from torch.quasirandom import SobolEngine
 from functions.rover_planning import Rover
 from functions.lasso_benchmark import LassoDNABenchmark
+from functions.mujoco_run import MujucoPolicyFunc
 
 
 

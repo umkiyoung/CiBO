@@ -83,6 +83,27 @@ sh baselines/scripts/cibo.sh
 
 All configuration settings are available in the [`baselines/scripts`](baselines/scripts) folder.
 
+### Reproducing the results in the paper
+
+`cibo.sh` runs every task reported in the paper with the hyperparameters of Appendix D.3:
+
+| | Tasks | Seeds | \|D0\| | B | Budget | λ | L | κ |
+|---|---|---|---|---|---|---|---|---|
+| Synthetic | Ackley / Rastrigin / Rosenbrock (200D), each with and without the indicator constraint | 12 (`0`–`11`) | 200 | 100 | 10,000 | 10 | 2000 | 0.01 |
+| Real-world | RoverPlanning (60D), HalfCheetah (102D), Mopta (124D), Lasso DNA (180D) | 4 (`0`–`3`) | 200 | 50 (Mopta: 20) | 2,000 | 5 / 5 / 10 / 5 | 1000 | 0.1 |
+
+The inverse temperature β of Eq. (12) is fixed to `1e5` for every task. It is implemented as
+`--alpha = 1 / β` with `--beta 1`, so the scripts pass `--alpha 1e-5`; `--gamma 1` and `--M 10`
+(the N of Appendix D.3) are likewise shared by all tasks.
+
+Runs are launched round-robin over the available GPUs, `NUM_GPUS` at a time (default 4):
+
+```bash
+NUM_GPUS=8 sh baselines/scripts/cibo.sh
+```
+
+The HalfCheetah task additionally requires `gym` and MuJoCo (see [Environment Setup](#-environment-setup)).
+
 ---
 
 ## 📚 References
