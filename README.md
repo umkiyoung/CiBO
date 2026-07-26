@@ -96,11 +96,8 @@ The inverse temperature β of Eq. (12) is fixed to `1e5` for every task. It is i
 `--alpha = 1 / β` with `--beta 1`, so the scripts pass `--alpha 1e-5`; `--gamma 1` and `--M 10`
 (the N of Appendix D.3) are likewise shared by all tasks.
 
-Runs are launched round-robin over the available GPUs, `NUM_GPUS` at a time (default 4):
-
-```bash
-NUM_GPUS=8 sh baselines/scripts/cibo.sh
-```
+Each task is launched one seed per GPU, four seeds at a time; adjust the `CUDA_VISIBLE_DEVICES`
+assignment in the script if a different number of GPUs is available.
 
 The HalfCheetah task additionally requires `gym` and MuJoCo (see [Environment Setup](#-environment-setup)).
 
