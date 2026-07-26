@@ -118,7 +118,7 @@ same tasks, seeds and budgets as `cibo.sh`:
 | FuRBO | `baselines/algorithms/furbo.py` | `baselines/scripts/furbo.sh` | |
 | DiffOPT | `baselines/algorithms/diffopt.py` | `baselines/scripts/diffopt.sh` | re-implemented (no public code); diffusion model + Langevin dynamics on the surrogate energy |
 | cEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name cEI` |
-| LogcEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name logcEI`; needs botorch >= 0.9 |
+| LogcEI | `baselines/algorithms/cei.py` | `baselines/scripts/logcei.sh` | `--acqf_name logcEI`; needs botorch >= 0.9 |
 | CMA-ES | `baselines/algorithms/cmaes.py` | `baselines/scripts/cmaes.sh` | needs `cma`; same Lagrangian and `--lamb` as CiBO |
 | COBYLA | `baselines/algorithms/cobyla.py` | `baselines/scripts/cobyla.sh` | `scipy.optimize.minimize(method="COBYLA")` |
 | Sobol | `baselines/algorithms/sobol.py` | `baselines/scripts/sobol.sh` | non-adaptive space-filling baseline |
