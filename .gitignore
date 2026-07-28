@@ -22,3 +22,5 @@ __pycache__/
 
 *.bin
 *.png
+# ...except the figures the README embeds
+!figures/*.png

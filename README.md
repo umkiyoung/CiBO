@@ -4,8 +4,13 @@ This repository implements the CiBO method presented in our paper **"Posterior I
 for Scalable Constrained Black-box Optimization"**. CiBO leverages diffusion models to perform efficient posterior inference and amortize the sampling from the posterior distribution in the latent space
 of flow-based models, achieving superior performance on various **synthetic and real-world constrained black-box optimization** tasks. 
 
-For a visual explanation of the CiBO framework, please see the image below:
-![figure1_update_ver4](https://github.com/user-attachments/assets/3eed0a81-1e14-45f3-9667-161f1c726cf2)
+For a visual explanation of why CiBO performs inference in latent space, please see the image below:
+![toy_latent_smoothness_final_ver4](figures/toy_latent_smoothness_final_ver4.png)
+
+On a 2D toy problem, the constrained posterior over `x` is sharply peaked and multi-modal, while the
+same posterior expressed in the latent space `z` of the flow model is far smoother — and therefore
+much easier for the diffusion sampler to cover. The vector version is at
+[`figures/toy_latent_smoothness_final_ver4.pdf`](figures/toy_latent_smoothness_final_ver4.pdf).
 
 ---
 ## 📑 Table of Contents
