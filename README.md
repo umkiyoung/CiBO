@@ -92,10 +92,10 @@ All configuration settings are available in the [`baselines/scripts`](baselines/
 
 `cibo.sh` runs every task reported in the paper with the hyperparameters of Appendix D.3:
 
-| | Tasks | Seeds | \|D0\| | B | Budget | λ | L | κ |
+| | Tasks | Seeds | \|D0\| | B | Budget | λ | L |
 |---|---|---|---|---|---|---|---|---|
-| Synthetic | Ackley / Rastrigin / Rosenbrock (200D), each with and without the indicator constraint | 12 (`0`–`11`) | 200 | 100 | 10,000 | 10 | 2000 | 0.01 |
-| Real-world | RoverPlanning (60D), HalfCheetah (102D), Mopta (124D), Lasso DNA (180D) | 4 (`0`–`3`) | 200 | 50 (Mopta: 20) | 2,000 | 5 / 5 / 10 / 5 | 1000 | 0.1 |
+| Synthetic | Ackley / Rastrigin / Rosenbrock (200D), each with and without the indicator constraint | 12 (`0`–`11`) | 200 | 100 | 10,000 | 10 | 2000 | 
+| Real-world | RoverPlanning (60D), HalfCheetah (102D), Mopta (124D), Lasso DNA (180D) | 4 (`0`–`3`) | 200 | 50 (Mopta: 20) | 2,000 | 5 / 5 / 10 / 5 | 1000 |
 
 The inverse temperature β of Eq. (12) is fixed to `1e5` for every task. It is implemented as
 `--alpha = 1 / β` with `--beta 1`, so the scripts pass `--alpha 1e-5`; `--gamma 1` and `--M 10`
@@ -148,19 +148,6 @@ Both scripts only need `numpy` and `matplotlib`, and print `File not found: ...`
 is missing instead of failing, so a partial `results/` directory still plots. The figures use
 Times New Roman; without that font installed, matplotlib silently falls back to its default serif
 and the output is very slightly different from the version committed under `baselines/figures/`.
-
-#### Memory note for SCBO on Mopta
-
-Mopta has 68 constraints, and SCBO draws its Thompson samples from the joint posterior of all
-constraint GPs over `N_CANDIDATES = 5000` points in `float64` (`baselines/algorithms/scbo.py`).
-That densifies a 5000 x 5000 block per constraint, so the peak GPU memory is roughly 45 GB —
-more than a 48 GB card can hold. Either use a larger GPU, or run this one configuration on CPU:
-
-```bash
-CUDA_VISIBLE_DEVICES="" python baselines/algorithms/scbo.py --task Mopta --dim 124 ...
-```
-
-Every other (method, task) pair fits comfortably on a single 48 GB GPU.
 
 ---
 
