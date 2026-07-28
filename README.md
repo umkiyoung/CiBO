@@ -133,6 +133,22 @@ curves in the paper are the mean and one standard deviation of these arrays acro
 
 Weights & Biases logging is off by default for every method; pass `--wandb true` to enable it.
 
+### Reproducing the paper figures
+
+The runs behind the paper are checked into this repository, so the figures can be regenerated
+without re-running any optimization. `baselines/results/` holds 88 `.npy` files per method — the
+6 synthetic settings x 12 seeds and the 4 real-world tasks x 4 seeds of the table above:
+
+```bash
+python baselines/reproduce_figure3.py   # → baselines/figures/synthetic.pdf   (Figure 3)
+python baselines/reproduce_figure4.py   # → baselines/figures/realworld.pdf   (Figure 4)
+```
+
+Both scripts only need `numpy` and `matplotlib`, and print `File not found: ...` for any run that
+is missing instead of failing, so a partial `results/` directory still plots. The figures use
+Times New Roman; without that font installed, matplotlib silently falls back to its default serif
+and the output is very slightly different from the version committed under `baselines/figures/`.
+
 #### Memory note for SCBO on Mopta
 
 Mopta has 68 constraints, and SCBO draws its Thompson samples from the joint posterior of all

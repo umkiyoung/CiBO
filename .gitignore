@@ -1,6 +1,8 @@
 # Ignore numpy binary files
 *.npy
 *.pkl
+# ...except the run results the paper figures are plotted from
+!baselines/results/**/*.npy
 # Ignore the .vscode folder
 .vscode/
 
