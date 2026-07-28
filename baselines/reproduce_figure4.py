@@ -65,10 +65,10 @@ cibo_data = load_data_config([
 ])
 
 cmaes_data = load_data_config([
-    ('cmaes', 'RoverPlanning', 60,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 3.0),
-    ('cmaes', 'Mopta',        124,  [0,1,2,3], 200, 'false', 20, 2000, 2000, 3.0),
-    ('cmaes', 'DNA',          180,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 3.0),
-    ('cmaes', 'HalfCheetah',  102,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 3.0),
+    ('cmaes', 'RoverPlanning', 60,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 5.0),
+    ('cmaes', 'Mopta',        124,  [0,1,2,3], 200, 'false', 20, 2000, 2000, 10.0),
+    ('cmaes', 'DNA',          180,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 5.0),
+    ('cmaes', 'HalfCheetah',  102,  [0,1,2,3], 200, 'false', 50, 2000, 2000, 5.0),
 ])
 
 scbo_data = load_data_config([

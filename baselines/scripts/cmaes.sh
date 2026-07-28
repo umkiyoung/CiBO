@@ -1,9 +1,9 @@
 export PYTHONPATH=/path/to/CiBO:/path/to/CiBO/baselines:$PYTHONPATH
 
-# CMA-ES (Hansen et al.) with the same Lagrangian constraint handling as CiBO.
+# CMA-ES (Hansen et al.) with the same Lagrangian constraint handling and lambda as CiBO.
 # Seeds follow the paper: 12 seeds for synthetic tasks, 4 seeds for real-world tasks.
 # Synthetic runs are dispatched over 4 GPUs, 4 seeds at a time.
-# The reported runs use lambda = 10 for the synthetic tasks and lambda = 3 for the real-world ones.
+# --lamb follows Table 4 of the paper (the same lambda as CiBO for every task).
 
 # ----- Indicator False -----
 # Ackley
@@ -65,7 +65,7 @@ wait
 # RoverPlanning
 for seed in 0 1 2 3; do
         CUDA_VISIBLE_DEVICES=$seed python baselines/algorithms/cmaes.py --task RoverPlanning --dim 60 --batch_size 50\
-                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 3\
+                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 5\
         &
 done
 wait
@@ -73,7 +73,7 @@ wait
 # HalfCheetah
 for seed in 0 1 2 3; do
         CUDA_VISIBLE_DEVICES=$seed python baselines/algorithms/cmaes.py --task HalfCheetah --dim 102 --batch_size 50\
-                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 3\
+                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 5\
         &
 done
 wait
@@ -81,7 +81,7 @@ wait
 # Mopta
 for seed in 0 1 2 3; do
         CUDA_VISIBLE_DEVICES=$seed python baselines/algorithms/cmaes.py --task Mopta --dim 124 --batch_size 20\
-                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 3\
+                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 10\
         &
 done
 wait
@@ -89,7 +89,7 @@ wait
 # DNA
 for seed in 0 1 2 3; do
         CUDA_VISIBLE_DEVICES=$seed python baselines/algorithms/cmaes.py --task DNA --dim 180 --batch_size 50\
-                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 3\
+                --n_init 200 --max_evals 2000 --seed $seed --indicator false --lamb 5\
         &
 done
 wait
