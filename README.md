@@ -93,7 +93,7 @@ All configuration settings are available in the [`baselines/scripts`](baselines/
 `cibo.sh` runs every task reported in the paper with the hyperparameters of Appendix D.3:
 
 | | Tasks | Seeds | \|D0\| | B | Budget | λ | L |
-|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|
 | Synthetic | Ackley / Rastrigin / Rosenbrock (200D), each with and without the indicator constraint | 12 (`0`–`11`) | 200 | 100 | 10,000 | 10 | 2000 | 
 | Real-world | RoverPlanning (60D), HalfCheetah (102D), Mopta (124D), Lasso DNA (180D) | 4 (`0`–`3`) | 200 | 50 (Mopta: 20) | 2,000 | 5 / 5 / 10 / 5 | 1000 |
 
@@ -116,10 +116,10 @@ same tasks, seeds and budgets as `cibo.sh`:
 | SCBO | `baselines/algorithms/scbo.py` | `baselines/scripts/scbo.sh` | |
 | PCAGP-SCBO | `baselines/algorithms/pcagp_scbo.py` | `baselines/scripts/pcagp_scbo.sh` | needs `torch_pca` |
 | FuRBO | `baselines/algorithms/furbo.py` | `baselines/scripts/furbo.sh` | |
-| DiffOPT | `baselines/algorithms/diffopt.py` | `baselines/scripts/diffopt.sh` | re-implemented (no public code); diffusion model + Langevin dynamics on the surrogate energy |
+| DiffOPT | `baselines/algorithms/diffopt.py` | `baselines/scripts/diffopt.sh` | re-implemented (no public code) |
 | cEI | `baselines/algorithms/cei.py` | `baselines/scripts/cei.sh` | `--acqf_name cEI` |
 | LogcEI | `baselines/algorithms/cei.py` | `baselines/scripts/logcei.sh` | `--acqf_name logcEI`; needs botorch >= 0.9 |
-| CMA-ES | `baselines/algorithms/cmaes.py` | `baselines/scripts/cmaes.sh` | needs `cma`; same Lagrangian constraint handling as CiBO |
+| CMA-ES | `baselines/algorithms/cmaes.py` | `baselines/scripts/cmaes.sh` | needs `cma` |
 | COBYLA | `baselines/algorithms/cobyla.py` | `baselines/scripts/cobyla.sh` | `scipy.optimize.minimize(method="COBYLA")` |
 | Sobol | `baselines/algorithms/sobol.py` | `baselines/scripts/sobol.sh` | non-adaptive space-filling baseline |
 
