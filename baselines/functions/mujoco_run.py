@@ -96,12 +96,6 @@ class MujucoPolicyFunc():
     }
 
     def __init__(self, policy_file: str, env: str, lb: float, ub: float, num_rollouts, dtype, device, seed, negate=True):
-        # lin_policy = np.load(policy_file, allow_pickle=True)
-        # lin_policy = lin_policy['arr_0']
-        # self._policy = lin_policy[0]
-        # self._mean = lin_policy[1]
-        # self._std = lin_policy[2]
-        # self._dims = len(self._policy.ravel())
         self._env_name = env
         self._env = gym.make(env)
         self._env.reset(seed=2025)
@@ -111,7 +105,6 @@ class MujucoPolicyFunc():
         self.dim = self._dims
         self._lb = np.full(self._dims, lb)
         self._ub = np.full(self._dims, ub)
-        # self._dims = len(self._policy.ravel())
         self._policy_shape = (action_dims, state_dims)
         self._num_rollouts = num_rollouts
         self._render = False

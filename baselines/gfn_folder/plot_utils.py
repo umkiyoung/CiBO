@@ -207,10 +207,6 @@ def plot_step(energy, gfn_model, name, args, wandb, device, plot_data_size=10000
         plot_samples(samples, ax=ax_contour, bounds=(-13., 13.))
         plot_samples(samples, ax=ax_kde_overlay, bounds=(-13., 13.))
 
-        # fig_contour.savefig(f'{name}contour.pdf', bbox_inches='tight')
-        # fig_kde_overlay.savefig(f'{name}kde_overlay.pdf', bbox_inches='tight')
-        # fig_kde.savefig(f'{name}kde.pdf', bbox_inches='tight')
-        # return None
         return {"visualization/contour": wandb.Image(fig_to_image(fig_contour)),
                 "visualization/kde_overlay": wandb.Image(fig_to_image(fig_kde_overlay)),
                 "visualization/kde": wandb.Image(fig_to_image(fig_kde))}

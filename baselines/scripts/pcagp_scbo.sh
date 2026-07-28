@@ -1,4 +1,4 @@
-export PYTHONPATH=/home/uky/repos_python/Release/CiBO:/home/uky/repos_python/Release/CiBO/baselines:$PYTHONPATH
+export PYTHONPATH=/path/to/CiBO:/path/to/CiBO/baselines:$PYTHONPATH
 
 # PCAGP-SCBO: SCBO with PCA-projected constraint surrogates.
 # Seeds follow the paper: 12 seeds for synthetic tasks, 4 seeds for real-world tasks.

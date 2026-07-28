@@ -16,7 +16,6 @@ from torch.quasirandom import SobolEngine
 
 from botorch.fit import fit_gpytorch_mll
 from botorch.optim import optimize_acqf
-from botorch.generation.sampling import ConstrainedMaxPosteriorSampling
 from botorch.acquisition import qLogExpectedImprovement, qExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
@@ -58,14 +57,14 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=0, type=int, help='random seed')
     parser.add_argument('--indicator', default='false', type=str, help='indicator function')
     parser.add_argument('--acqf_name', default='logcEI', type=str, help='acquisition function name')
-    parser.add_argument('--save_path', default='./baselines/results/cei/', type=str, help='path to save the results')
+    parser.add_argument('--save_path', default=None, type=str, help='path to save the results')
     parser.add_argument('--wandb', default='false', type=str, help='log to Weights & Biases')
     args = parser.parse_args()
     warnings.filterwarnings("ignore")
 
     # Default to a per-acquisition-function directory; an explicit --save_path wins.
-    if args.save_path == './baselines/results/cei/':
-        args.save_path = f"./baselines/results/{args.acqf_name}/"
+    if args.save_path is None:
+        args.save_path = f"./baselines/results/{args.acqf_name.lower()}/"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.double
@@ -76,11 +75,7 @@ if __name__ == "__main__":
     set_seed(seed)
     
     acqf_name = args.acqf_name
-    # if acqf_name == "logcEI":
-    #     args.save_path = f"./baselines/results/logcEI/"
-    # elif acqf_name == "cEI":
-    #     args.save_path = f"./baselines/results/cEI/"
-    
+
     if args.wandb.lower() == "true":
         wandb.init(project="cei", config=vars(args))
     else:
@@ -168,8 +163,6 @@ if __name__ == "__main__":
                 state.success_counter = 0
                 state.failure_counter += 1
 
-        # Update the length of the trust region according to the success and failure counters
-        # state = update_tr_length(state)
         return state
 
     def generate_batch(
@@ -180,42 +173,10 @@ if __name__ == "__main__":
         C,  # Constraint values
         batch_size,
         n_candidates,  # Number of candidates for Thompson sampling
-        # constraint_model,
         sobol: SobolEngine,
     ):
         assert X.min() >= 0.0 and X.max() <= 1.0 and torch.all(torch.isfinite(Y))
 
-        # # Create the TR bounds
-        # best_ind = get_best_index_for_batch(Y=Y, C=C)
-        # x_center = X[best_ind, :].clone()
-        # tr_lb = torch.clamp(x_center - state.length / 2.0, 0.0, 1.0)
-        # tr_ub = torch.clamp(x_center + state.length / 2.0, 0.0, 1.0)
-
-        # # Thompson Sampling w/ Constraints (SCBO)
-        # dim = X.shape[-1]
-        # pert = sobol.draw(n_candidates).to(dtype=dtype, device=device)
-        # pert = tr_lb + (tr_ub - tr_lb) * pert
-
-        # # Create a perturbation mask
-        # prob_perturb = min(20.0 / dim, 1.0)
-        # mask = torch.rand(n_candidates, dim, **tkwargs) <= prob_perturb
-        # ind = torch.where(mask.sum(dim=1) == 0)[0]
-        # mask[ind, torch.randint(0, dim - 1, size=(len(ind),), device=device)] = 1
-
-        # # Create candidate points from the perturbations and the mask
-        # X_cand = x_center.expand(n_candidates, dim).clone()
-        # X_cand[mask] = pert[mask]
-
-        # # Sample on the candidate points using Constrained Max Posterior Sampling
-        # constrained_thompson_sampling = ConstrainedMaxPosteriorSampling(
-        #     model=model, constraint_model=constraint_model, replacement=False
-        # )
-        # with torch.no_grad():
-        #     X_next = constrained_thompson_sampling(X_cand, num_samples=batch_size)
-
-        # # 후보 생성 후 중간 변수 정리
-        # del pert, mask, X_cand
-        # clear_gpu_memory()
         if acqf_name == "logcEI":
             qmc_sampler = SobolQMCNormalSampler(sample_shape=torch.Size([256]))
             qLogEI = qLogExpectedImprovement(
@@ -305,7 +266,6 @@ if __name__ == "__main__":
     while len(total_X) < max_evals:  # Run until TuRBO converges
         iteration += 1
         print(f"\n===== Iteration {iteration} =====")
-        # print(f"Memory status before fitting models - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
         
         # 메모리 정리
         clear_gpu_memory()
@@ -333,7 +293,6 @@ if __name__ == "__main__":
         _t_surrogate = _sync_time()
         model = get_fitted_model(train_X, train_Y)
         
-        # print("Fitting constraint models...")
         const_model_list = []
         for i in range(num_constraints):
             const_model_list.append(get_fitted_model(train_X, C_list[i]))
@@ -344,7 +303,6 @@ if __name__ == "__main__":
         _t_candidates = _sync_time()
         with gpytorch.settings.max_cholesky_size(max_cholesky_size):
             C = torch.cat(C_list, dim = -1)
-            # const_model_list_gp = ModelListGP(*const_model_list)
             model = ModelListGP(model, *const_model_list)
             X_next = generate_batch(
                 state=state,
@@ -354,7 +312,6 @@ if __name__ == "__main__":
                 C=C,
                 batch_size=batch_size,
                 n_candidates=N_CANDIDATES,
-                # constraint_model=const_model_list_gp,
                 sobol=sobol,
             )
         
@@ -417,4 +374,3 @@ if __name__ == "__main__":
         
         # 반복 종료 시 메모리 정리
         clear_gpu_memory()
-        # print(f"Memory status at end of iteration - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")

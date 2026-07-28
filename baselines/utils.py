@@ -76,7 +76,6 @@ def get_value_based_weights(scores, temp="90"):
     hist, bin_edges = np.histogram(scores_np, bins=20)
     hist = hist / np.sum(hist)
 
-    # if base_temp is None:
     if temp == "90":
         base_temp = adaptive_temp_v2(scores_np, q=0.9)
     elif temp == "75":
@@ -89,7 +88,6 @@ def get_value_based_weights(scores, temp="90"):
 
     provable_dist = softmin_prob * (hist / (hist + 1e-3))
     provable_dist = provable_dist / (np.sum(provable_dist) + 1e-7)
-    # print(provable_dist)
 
     bin_indices = np.digitize(scores_np, bin_edges[1:])
     hist_prob = hist[np.minimum(bin_indices, 19)]

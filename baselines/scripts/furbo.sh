@@ -1,4 +1,4 @@
-export PYTHONPATH=/home/uky/repos_python/Release/CiBO:/home/uky/repos_python/Release/CiBO/baselines:$PYTHONPATH
+export PYTHONPATH=/path/to/CiBO:/path/to/CiBO/baselines:$PYTHONPATH
 
 # FuRBO (Ascia et al., 2025).
 # Seeds follow the paper: 12 seeds for synthetic tasks, 4 seeds for real-world tasks.

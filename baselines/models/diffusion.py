@@ -53,17 +53,6 @@ class QFlowMLP(nn.Module):
         self.q = q_net
         self.beta = beta
 
-        # self.x_model = nn.Sequential(
-        #     nn.Linear(x_dim + 128, hidden_dim, dtype=dtype), nn.GELU(), nn.Linear(hidden_dim, hidden_dim, dtype=dtype), nn.GELU()
-        # )
-
-        # self.out_model = nn.Sequential(
-        #     nn.Linear(hidden_dim, hidden_dim, dtype=dtype),
-        #     nn.LayerNorm(hidden_dim, dtype=dtype),
-        #     nn.GELU(),
-        #     nn.Linear(hidden_dim, x_dim, dtype=dtype),
-        # )
-
         self.proj = nn.Linear(x_dim, hidden_dim)
         self.residual_mlp = ResidualMLP(
             input_dim=hidden_dim + 128,
@@ -90,17 +79,6 @@ class QFlowMLP(nn.Module):
         t_fourier1 = (t.unsqueeze(1) * self.harmonics).sin()
         t_fourier2 = (t.unsqueeze(1) * self.harmonics).cos()
         t_emb = torch.cat([t_fourier1, t_fourier2], 1)
-        # if not self.is_qflow:
-        #     x_emb = self.x_model(torch.cat([x, t_emb], 1))
-        # if self.is_qflow:
-        #     # with torch.no_grad():
-        #     x_emb = self.x_model(torch.cat([x, t_emb], 1))
-        #     with torch.enable_grad():
-        #         x.requires_grad_(True)
-        #         means_scaling = self.means_scaling_model(t_emb) * self.q.score(x, beta=self.beta)
-        #     return self.out_model(x_emb) + means_scaling
-        # return self.out_model(x_emb)
-        # x = self.proj(x) + t_emb
         x = torch.cat([self.proj(x), t_emb], 1)
         return self.residual_mlp(x)
     
@@ -148,7 +126,6 @@ class QFlowTB(nn.Module):
         t_fourier1 = (t.unsqueeze(1) * self.harmonics).sin()
         t_fourier2 = (t.unsqueeze(1) * self.harmonics).cos()
         t_emb = torch.cat([t_fourier1, t_fourier2], 1)
-        # with torch.no_grad():
         x_emb = self.x_model(torch.cat([x, t_emb], 1))
         with torch.enable_grad():
             x.requires_grad_(True)
@@ -335,7 +312,6 @@ class QFlow(nn.Module):
         x_dim,
         diffusion_steps,
         schedule="linear",
-        # predict="epsilon",
         q_net=None,
         bc_net=None,
         alpha=1.0,
@@ -346,12 +322,10 @@ class QFlow(nn.Module):
         self.x_dim = x_dim
         self.diffusion_steps = diffusion_steps
         self.schedule = schedule
-        # self.predict = predict
         self.logZ = torch.nn.Parameter(torch.tensor(0.0, dtype=dtype))
         self.q_net = q_net
         self.bc_net = bc_net
         self.qflow = copy.deepcopy(bc_net.policy)
-        # self.qflow.is_qflow = True  # This makes things more than 1.5x slower
         self.qflow.q = q_net
         self.qflow.beta = beta
 
@@ -376,7 +350,6 @@ class QFlow(nn.Module):
 
         logpf_pi = normal_dist.log_prob(x).sum(1)
         logpf_p = normal_dist.log_prob(x).sum(1)
-        # print(logpf_pi[:4])
         extra_steps = 1
         if extra:
             extra_steps = 20

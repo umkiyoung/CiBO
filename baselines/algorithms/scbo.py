@@ -3,7 +3,6 @@ import os
 import warnings
 import gc  # 가비지 컬렉션 추가
 from dataclasses import dataclass
-# from botorch.exceptions.errors import ModelFittingError
 import gpytorch
 import torch
 from gpytorch.constraints import Interval
@@ -54,7 +53,6 @@ if __name__ == "__main__":
     dtype = torch.double
     tkwargs = {"device": device, "dtype": dtype}
     SMOKE_TEST = os.environ.get("SMOKE_TEST")
-    # max_cholesky_size = float("inf") 
     max_cholesky_size = 1024
     task, dim, max_evals, n_init, batch_size, seed, indicator = args.task, args.dim, args.max_evals, args.n_init, args.batch_size, args.seed , args.indicator
     set_seed(seed)
@@ -249,7 +247,6 @@ if __name__ == "__main__":
     while len(X_total) < max_evals:  # Run until TuRBO converges
         iteration += 1
         print(f"\n===== Iteration {iteration} =====")
-        # print(f"Memory status before fitting models - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
         
         # 메모리 정리
         clear_gpu_memory()
@@ -278,16 +275,6 @@ if __name__ == "__main__":
         _t_surrogate = _sync_time()
         print("Fitting objective model...")
         model = get_fitted_model(train_X, train_Y)
-        # try:
-        #     model = get_fitted_model(train_X, train_Y)
-        #     const_model_list = [
-        #         get_fitted_model(train_X, C_list[i]) 
-        #         for i in range(num_constraints)
-        #     ]
-        # except ModelFittingError as e:
-        #     print(f"[Warning] GP fitting failed: {e!r}")
-        #     state.restart_triggered = True
-        #     continue
         
         print("Fitting constraint models...")
         const_model_list = []
@@ -377,4 +364,3 @@ if __name__ == "__main__":
         
         # 반복 종료 시 메모리 정리
         clear_gpu_memory()
-        # print(f"Memory status at end of iteration - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")

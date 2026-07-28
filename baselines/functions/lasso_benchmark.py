@@ -23,7 +23,6 @@ class LassoRealWorldBenchmark:
         )
         self.input_dim = self._b.n_features
         self.effective_dim = None # to be filled in derived classes
-        #self.bounds = [(-1.0, 1.0)]*self.input_dim
         self.bounds = torch.zeros((2, self.input_dim), dtype=dtype, device=device)
         self.name = f'lasso-{pick_data}'
         self.noise_std = 0

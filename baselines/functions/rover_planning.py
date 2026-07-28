@@ -193,33 +193,6 @@ class RoverDomain:
                              self.start if self.force_start else None,
                              self.goal if self.force_goal else None)
     
-    # def eval_constraints(self, points):
-    #     """
-    #     Evaluate the constraints at the given points.
-    #     :param points: The points to evaluate the constraints at.
-    #     :return: The evaluated constraints.
-    #     """
-    #     # Check if any point is within the constraint
-    #     c_is = []
-    #     for i in range(len(self.constraint_location)):
-    #         constraint_point = self.constraint_location[i]
-    #         constraint_x_h, constraint_y_h = constraint_point + self.constraint_size
-    #         constraint_x_l, constraint_y_l = constraint_point - self.constraint_size
-    #         points = np.array(points)
-    #         constraint_violated = (
-    #             (constraint_x_l <= points[:, 0]) & (points[:, 0] <= constraint_x_h) &
-    #             (constraint_y_l <= points[:, 1]) & (points[:, 1] <= constraint_y_h)
-    #         )
-
-    #         if constraint_violated.any():
-    #             c_is.append(get_max_box_distance(trajectory=points, point = constraint_point, size = self.constraint_size))
-    #         else:
-    #             c_is.append(-get_minimum_distance(trajectory=points, point = constraint_point))        
-        
-    #     # stack all the constraints
-    #     constraints = np.vstack(c_is)
-        
-    #     return constraints
     
     def eval_constraints(self, points):
         points = np.asarray(points)  # (M, 2)
@@ -829,14 +802,6 @@ class Rover(BaseFunc):
         # maximum value of f
         f_max = 5.0
         self._func = NormalizedInputFn(ConstantOffsetFn(domain, f_max), raw_x_range)
-        # x_range = self._func.get_range()
-        #
-        # x = np.random.uniform(x_range[0], x_range[1])
-        # print("type:", type(self.evaluate(x)))
-        # print("x_range[0]:", x_range[0], len(x_range[0]))
-        # print("x_range[1]:", x_range[1], len(x_range[1]))
-        # print('Input = {}'.format(x))
-        # print('Output = {}'.format(self.evaluate(x)))
 
     def __call__(self, x: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         x = x.cpu().detach().numpy().reshape(1, -1)
@@ -852,13 +817,6 @@ if __name__ == "__main__":
                                         start_miss_cost=l2cost,
                                         goal_miss_cost=l2cost)
     domain.set_params(torch.randn((100, 2))/1000)
-    
-    # Plot the 2D rover domain
-    # plot_2d_rover(domain, ngrid_points=100, ntraj_points=100, colormap='Spectral', draw_colorbar=True)
-
-    # create a small domain
-    # domain = create_small_domain()
-    # domain.set_params(torch.randn((60, 2))/1000)
     
     plot_2d_rover(domain, ngrid_points=100, ntraj_points=100, colormap='Spectral', draw_colorbar=True)
 

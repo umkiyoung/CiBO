@@ -440,7 +440,6 @@ class GFN(nn.Module):
 
         for i in range(self.trajectory_length):
             pfs, flow = self.predict_next_state(s, i * self.dt, log_r)
-            # pfs = self.predict_next_state(s, i * self.dt, log_r)
             pf_mean, pflogvars = self.split_params(pfs)
 
             logf[:, i] = flow
@@ -546,10 +545,6 @@ class GFN(nn.Module):
     def sample(self, batch_size, log_r):
         s = torch.zeros(batch_size, self.dim, device=self.device, dtype=self.dtype)
         return self.get_trajectory_fwd(s, None, log_r)[0][:, -1]
-    
-    # def sample_normal(self, initial_states, batch_size, log_r):
-    #     # s = torch.zeros(batch_size, self.dim).to(self.device)
-    #     return self.get_trajectory_fwd(initial_states, None, log_r)[0][:, -1]
 
     def sleep_phase_sample(self, batch_size, exploration_std):
         s = torch.zeros(batch_size, self.dim, device=self.device, dtype=self.dtype)

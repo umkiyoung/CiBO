@@ -34,7 +34,6 @@ class RewardDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         return self.rewards[idx]
-        #return  self.score_list[idx]
 
 
     def update(self, rewards):

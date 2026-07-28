@@ -1,13 +1,12 @@
 import os
 import time
 import argparse
-import random
 import numpy as np
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from baselines.models.diffusion import QFlow, DiffusionModel
+from baselines.models.diffusion import DiffusionModel
 from baselines.models.diffopt import DiffOPT
 from baselines.functions.test_function import TestFunction
 from baselines.models.value_functions import ProxyEnsemble, Proxy 
@@ -75,7 +74,6 @@ if __name__ == "__main__":
     
        
     num_rounds = (args.max_evals - n_init) // batch_size
-    #num_epochs = args.num_epochs
     num_proxy_epochs = args.num_proxy_epochs
     num_prior_epochs = args.num_prior_epochs
     num_posterior_epochs = args.num_posterior_epochs
@@ -128,8 +126,6 @@ if __name__ == "__main__":
                     x = (x - test_function.X_mean) / (test_function.X_std + 1e-7)
                     x += torch.randn_like(x) * 0.001
                     y = (y - test_function.Y_mean) / (test_function.Y_std + 1e-7)
-                    # c = test_function.normalizing_constraints(c, test_function.C_mean, test_function.C_std) #TODO: Constraint Normalizing 방법 수정
-                    # c = (c - test_function.C_mean) / (test_function.C_std + 1e-7)
                     proxy_model_optimizer.zero_grad()
                     loss = proxy_model.compute_loss(x, y)
                     loss.backward()
@@ -145,9 +141,7 @@ if __name__ == "__main__":
                 for x, y, c in data_loader:
                     x = (x - test_function.X_mean) / (test_function.X_std + 1e-7)
                     x += torch.randn_like(x) * 0.001
-                    # y = (y - test_function.Y_mean) / (test_function.Y_std + 1e-7)
                     c = test_function.normalizing_constraints(c) #TODO: Constraint Normalizing 방법 수정
-                    # c = (c - test_function.C_mean) / (test_function.C_std + 1e-7)
                     proxy_model_optimizer.zero_grad()
                     loss = proxy_model.compute_loss(x, c[:, j].unsqueeze(-1))
                     loss.backward()
@@ -171,7 +165,6 @@ if __name__ == "__main__":
                 loss.backward()
                 prior_model_optimizer.step()
                 total_loss += loss.item()
-            # print(f"Round: {round+1}\tEpoch: {epoch+1}\tLoss: {total_loss:.3f}")
         _time_generative = _sync_time() - _t_generative
         print(f"Round: {round+1}\tPrior model trained")
 
@@ -180,93 +173,6 @@ if __name__ == "__main__":
         beta = args.beta
         sampler = DiffOPT(prior_model, proxy_model_ens, alpha, beta, dtype, device)
         X_sample = sampler.sample(batch_size, device=device)
-        # posterior_model = QFlow(x_dim=dim, diffusion_steps=args.diffusion_steps, q_net=proxy_model_ens, bc_net=prior_model, alpha=alpha, beta=beta).to(dtype=dtype, device=device)
-        # posterior_model_optimizer = torch.optim.Adam(posterior_model.parameters(), lr=1e-4)
-        
-        # # xs = torch.tensor(test_function.X, dtype=dtype, device=device)
-        # xs = test_function.X.clone().detach()
-        # xs = (xs - test_function.X_mean) / (test_function.X_std + 1e-7)
-        # ys = proxy_model_ens.log_reward(xs)
-        # y_weights = torch.softmax(ys, dim=0)
-        
-        # if num_posterior_epochs > 0:
-        #     for epoch in tqdm(range(num_posterior_epochs), dynamic_ncols=True):
-        #         if args.training_posterior == "both":
-        #             s1 = random.randint(0, 1)
-        #         elif args.training_posterior == "on":
-        #             s1 = 0
-        #         else: # off
-        #             s1 = 1
-                    
-        #         if s1 == 0:
-        #             # on-policy
-        #             loss, logZ, x, logr = posterior_model.compute_loss(device, gfn_batch_size=train_batch_size)
-        #             y = proxy_model_ens.log_reward(x)
-        #         else:
-        #             # off-policy (reward prioritization)
-        #             idx = torch.multinomial(y_weights.squeeze(), train_batch_size, replacement=True)
-        #             x = xs[idx]
-        #             x += torch.randn_like(x) * 0.01
-        #             loss, logZ = posterior_model.compute_loss_with_sample(x, device)
-        #             y = proxy_model_ens.log_reward(x)
-                    
-        #         xs = torch.cat([xs, x], dim=0)
-        #         ys = torch.cat([ys, y], dim=0)
-        #         y_weights = torch.softmax(ys, dim=0)
-                
-        #         posterior_model_optimizer.zero_grad()
-        #         loss.backward()
-        #         posterior_model_optimizer.step()                
-        #         # print(f"Round: {round+1}\tEpoch: {epoch+1}\tLoss: {total_loss:.3f}")
-        #     print(f"Round: {round+1}\tPosterior model trained")    
-        
-        
-        # # Filtering for selecting candidates
-        # X_sample_total = []
-        # logR_sample_total = []
-        # if args.filtering == "True":
-        #     M = args.num_proposals
-        # else: # 
-        #     M = 1
-            
-        # for _ in tqdm(range(M)): #NOTE M**2 samples proposal.
-        #     # Split into batches due to memory constraints
-        #     X_sample, logpf_pi, logpf_p = posterior_model.sample(bs=batch_size * M, device=device)
-        #     logpf_pi = posterior_model.compute_marginal_likelihood(X_sample)
-        #     logr = posterior_model.posterior_log_reward(X_sample).squeeze()
-        #     logR = logr + logpf_pi * alpha
-            
-        #     if args.local_search == "True" and args.local_search_epochs > 0:
-        #         X_sample_optimizer = torch.optim.Adam([X_sample], lr=1e-2)
-        #         for _ in range(args.local_search_epochs):
-        #             X_sample.requires_grad_(True)
-        #             logr_sample = posterior_model.posterior_log_reward(X_sample).squeeze()
-        #             logpf_pi_sample = posterior_model.compute_marginal_likelihood(X_sample)
-        #             logR_sample = logr_sample + logpf_pi_sample * alpha
-        #             if args.reward_sampler == "True":
-        #                 loss = -logR_sample.sum()
-        #             else:
-        #                 loss = -torch.exp(logR_sample).sum()
-        #             # loss = -logR_sample.sum()
-                    
-        #             X_sample_optimizer.zero_grad()
-        #             loss.backward()
-        #             X_sample_optimizer.step()
-        #         X_sample = X_sample.detach()
-        #         logR_sample = logR_sample.detach()
-                
-        #         X_sample_total.append(X_sample)
-        #         logR_sample_total.append(logR_sample)
-        #     else:
-        #         X_sample_total.append(X_sample)
-        #         logR_sample_total.append(logR)
-            
-                    
-        # X_sample = torch.cat(X_sample_total, dim=0)
-        # logR_sample = torch.cat(logR_sample_total, dim=0)
-        
-        # X_sample = X_sample[torch.argsort(logR_sample, descending=True)][:batch_size]
-        # logR_sample = logR_sample[torch.argsort(logR_sample, descending=True)][:batch_size]
 
         X_sample = X_sample.detach()
         _time_candidates = _sync_time() - _t_candidates
@@ -288,15 +194,12 @@ if __name__ == "__main__":
 
         
         print(f"Round: {round+1}\tSeed: {seed}\tMax so far: {test_function.Y.max().item():.3f}\tMin Constraint: {test_function.C.min().item():.3f}\t Log_rewards: {proxy_model_ens.log_reward(test_function.X).max().item():.3f}\t True score: {test_function.true_score.max().item():.3f}")
-        # print(f"Round: {round+1}\tMax so far: {test_function.Y.max().item():.3f}")
         
         print(f"Time taken: {time.time() - start_time:.3f} seconds")
         _time_total = _time_surrogate + _time_generative + _time_candidates + _time_oracle
         print(f"[TIME] Round {round+1}: surrogate={_time_surrogate:.2f}s generative={_time_generative:.2f}s candidates={_time_candidates:.2f}s oracle={_time_oracle:.2f}s total={_time_total:.2f}s")
         print()
 
-        # Remove low-score samples in the training set (it seems cruical for the performance)
-        # idx = torch.argsort(test_function.Y.squeeze(), descending=True)[:args.buffer_size]
         
         norm_Y = (test_function.Y - test_function.Y_mean) / (test_function.Y_std + 1e-7)
         norm_C = test_function.normalizing_constraints(test_function.C)
@@ -347,7 +250,6 @@ if __name__ == "__main__":
         
         
         
-        # if len(Y_total) >= 1000:
         save_len = min(len(Y_total) // 1000 * 1000, args.max_evals)
         if args.constraint_formulation in ["Soft", "LogBarrier", "Lagrangian"]:
             save_np = True_total[:save_len]

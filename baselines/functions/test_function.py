@@ -40,10 +40,6 @@ class TestFunction(Dataset):
             def c2(x):
                 return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
 
-            # def c1(x):
-            #     return torch.sum(x - torch.ones_like(x), dim=-1) - 0
-            # def c2(x):
-            #     return torch.norm(x - torch.ones_like(x), p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
                         
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
@@ -65,10 +61,6 @@ class TestFunction(Dataset):
                 return torch.norm(x, p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
 
 
-            # def c1(x):
-            #     return torch.sum(x - torch.ones_like(x), dim=-1) - 0
-            # def c2(x):
-            #     return torch.norm(x - torch.ones_like(x), p=2, dim=-1) - 30 #NOTE: Adjusted to 30 for 200D
 
             def eval_c1(x):
                 return c1(unnormalize(x, self.fun.bounds))
@@ -232,7 +224,6 @@ class TestFunction(Dataset):
             return self.fun(unnormalize(x, self.fun.bounds))[0]
         elif self.task in ['Mopta']:
             return evaluate_batch_parallel(x, self.fun, self.dtype, self.device)[0]
-            # return self.fun(unnormalize(x, self.fun.bounds))[0]
         else:
             return self.fun(unnormalize(x, self.fun.bounds))
     

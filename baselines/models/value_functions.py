@@ -27,7 +27,6 @@ class Proxy(nn.Module):
     
     def compute_loss(self, x, y):
         pred = self(x)
-        # concat_yc = torch.cat([y, c], dim=-1) if c is not None else y
         loss = F.mse_loss(pred, y)
         return loss
 

@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--lamb", type=float, default=1.0)
     parser.add_argument("--M", type=int, default=10) # Number of samples for filtering
     parser.add_argument("--num_ensembles", type=int, default=5)
-    parser.add_argument("--save_path", type=str, default="./baselines/results/CiBO/")
+    parser.add_argument("--save_path", type=str, default="./baselines/results/cibo/")
     parser.add_argument("--wandb", type=str, default="false", choices=('true', 'false'))
     parser.add_argument("--indicator", type=str, default="false", choices=('true', 'false'))
     parser.add_argument("--rank_k", type=float, default=1e-2)
@@ -336,9 +336,9 @@ if __name__ == "__main__":
         
         save_len = min(len(Y_total) // 1000 * 1000, args.max_evals)
         save_np = True_total[:save_len]
-        file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len}.npy"
+        file_name = f"cibo_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len}.npy"
         save_numpy_array(path=args.save_path, array=save_np, file_name=file_name)
         
-        previous_file_name = f"CiBO_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len-1000}.npy"
+        previous_file_name = f"cibo_{task}_{dim}_{seed}_{n_init}_{args.indicator}_{args.lamb}_{args.batch_size}_{args.buffer_size}_{args.max_evals}_{save_len-1000}.npy"
         if os.path.exists(os.path.join(args.save_path, previous_file_name)):
             os.remove(os.path.join(args.save_path, previous_file_name))

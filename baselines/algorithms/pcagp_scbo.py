@@ -247,7 +247,6 @@ if __name__ == "__main__":
     while len(total_X) < max_evals:  # Run until TuRBO converges
         iteration += 1
         print(f"\n===== Iteration {iteration} =====")
-        # print(f"Memory status before fitting models - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
         
         # 메모리 정리
         clear_gpu_memory()
@@ -275,7 +274,6 @@ if __name__ == "__main__":
         _t_surrogate = _sync_time()
         model = get_fitted_model(train_X, train_Y)
         
-        # print("Fitting constraint models...")
         C_list_torch = torch.cat(C_list, dim=-1)
         pca_model = PCA(n_components=num_components)
         new_C_list = pca_model.fit_transform(C_list_torch)
@@ -360,4 +358,3 @@ if __name__ == "__main__":
         
         # 반복 종료 시 메모리 정리
         clear_gpu_memory()
-        # print(f"Memory status at end of iteration - CUDA allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")

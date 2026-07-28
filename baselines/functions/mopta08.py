@@ -10,8 +10,6 @@ from typing import Optional, Union, List, Type
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
-from multiprocessing import Pool, cpu_count
-from functools import partial
 class ArgumentError(Exception):
     """
     An exception for an illegal input argmument.
@@ -149,11 +147,6 @@ class SyntheticBenchmark(Benchmark):
             x = np.expand_dims(x, 0)
         if x.ndim == 1:
             x = np.expand_dims(x, 0)
-        # for y in x:
-        #    if not np.sum(y < self._lb_vec) == 0:
-        #        raise OutOfBoundsException()
-        #    if not np.sum(y > self._ub_vec) == 0:
-        #        raise OutOfBoundsException
 
     @property
     def optimal_value(self) -> Optional[np.ndarray]:
@@ -255,11 +248,6 @@ class MoptaSoftConstraints(SyntheticBenchmark):
         assert x.ndim == 2
         # create tmp dir for mopta binary
 
-        # vals = np.array([self._call(y) for y in x]).squeeze()
-
-        # return vals + np.random.normal(
-        #     np.zeros_like(vals), np.ones_like(vals) * self.noise_std, vals.shape
-        # )
         vals_and_constraints = [self._call(y) for y in x]
         vals, constraints = zip(*vals_and_constraints)
         vals = np.array(vals).squeeze()
@@ -291,7 +279,6 @@ class MoptaSoftConstraints(SyntheticBenchmark):
                 output = [float(line.strip()) for line in f if line.strip()]
             value, constraints = output[0], output[1:]
             return value, constraints
-            # return value + 10 * np.sum(np.clip(constraints, 0, None))
 
     @property
     def optimal_value(self) -> Optional[np.ndarray]:
@@ -304,14 +291,7 @@ def evaluate_single(x_single, benchmark: MoptaSoftConstraints):
 
 def evaluate_batch_parallel(x, benchmark: MoptaSoftConstraints, dtype,device, processes=None):
     x = x.detach().cpu().numpy()
-    # if processes is None:
-    #     processes = cpu_count()//2
-
-    # with Pool(processes) as pool:
-    #     results = pool.map(partial(evaluate_single, benchmark=benchmark), x)
-    
     values, constraints = benchmark(x)
-    # values, constraints = zip(*results)
     values = torch.as_tensor(values, dtype=dtype, device=device) * -1
     constraints = torch.as_tensor(constraints, dtype=dtype, device=device)
     return values, constraints

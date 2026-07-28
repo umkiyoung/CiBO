@@ -14,7 +14,6 @@ class EasyFunnel(BaseSet):
     """
     def __init__(self, device, dim=10):
         super().__init__()
-        # xlim = 0.01 if nmode == 1 else xlim
         self.device = device
 
         self.data = torch.ones(dim, dtype=float).to(self.device)

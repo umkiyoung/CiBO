@@ -19,7 +19,7 @@ def get_cum_max(array):
 
 
 def load_data(alg, task, dim, seed, n_init, indicator, batch_size, max_evals, buffer_size=None, lamb=None):
-    path = f'{BASE_DIR}/results/{alg}/'
+    path = f'{BASE_DIR}/results/{alg.lower()}/'
     if lamb is None and buffer_size is not None:
         filename = f'{alg}_{task}_{dim}_{seed}_{n_init}_{indicator}_{batch_size}_{buffer_size}_{max_evals}_{max_evals}.npy'
     elif buffer_size is None and lamb is None:
